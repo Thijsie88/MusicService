@@ -25,6 +25,10 @@ def my_hook(d):
     if d['status'] == 'finished':
         print('Done downloading, now converting ...')
 
+file_format = str(os.getenv('FILEFORMAT')) or '%(playlist)s/%(title)s-%(id)s.%(ext)s'
+
+print(file_format)
+
 # Configure YouTube DL options
 ydl_opts = {
     'writethumbnail': True,
@@ -35,11 +39,15 @@ ydl_opts = {
         'preferredcodec': 'mp3',                                    # convert to MP3 format
         #'preferredquality': '192',                                 # with not specifying a preffered quality, the original bitrate will be used, therefore skipping one unnecessary conversion and keeping more quality
         },
-    {'key': 'EmbedThumbnail',},                                     # embed the Youtube thumbnail with the MP3 as coverart.
+        {'key': 'EmbedThumbnail',},                                     # embed the Youtube thumbnail with the MP3 as coverart.
+        {
+            'key': 'FFmpegMetadata',
+            'add_metadata': True,
+        },
     ],
     'logger': MyLogger(),
     'progress_hooks': [my_hook],
-    'outtmpl': './music/%(playlist)s/%(title)s-%(id)s.%(ext)s',     # save music to the /music folder. and it's corrosponding folder which will be named after the playlist name
+    'outtmpl': './music/' + file_format,     # save music to the /music folder. and it's corrosponding folder which will be named after the playlist name
     'simulate': False,                                              # to dry test the YT-DL, if set to True, it will skip the downloading. Can be True/False
     'cachedir': False,                                              # turn off caching, this should mitigate 403 errors which are commonly seen when downloading from Youtube
     'download_archive': './config/downloaded',                      # this will update the downloads file which serves as a database/archive for which songs have already been downloaded, so it don't downloads them again
@@ -187,11 +195,13 @@ if __name__ == '__main__':
     # get the OS enviroment variabels and save them to local variabels
     # these enviroment variabels get passed by the docker run command and default variables are passed through the Dockerfile
     localDirectory = 'music'                                   # 'music' always use music as local, this can't be changed at the moment, due to some hardcoding
+    uploadFiles = str(os.getenv('UPLOADFILES')).lower()        # whether to upload files to 
     url = str(os.getenv('URL'))                                # WebDAV URL
     remoteDirectory = str(os.getenv('DIRECTORY'))              # WebDAV directory where you want to save your music
     username = str(os.getenv('USERNAME'))                      # WebDAV username
     password = str(os.getenv('PASSWORD'))                      # WebDAV password
     interval = int(os.getenv('INTERVAL'))*60                   # How often the the program should check for updated playlists, (did it times 60 to put it into seconds, so users can put it in minutes)
+    cleanFiles = str(os.getenv('CLEANFILES')).lower()          # whether to clean files from music cache
     
     # welcome message
     print("Started Music Service")
@@ -213,14 +223,20 @@ if __name__ == '__main__':
         print("")
         print('Creating cloud folder structure based on local directories...')
         create_folders(localDirectory)
-
-        print("")
-        print('Uploading music into the cloud folders...')
-        upload_music(remoteDirectory)
         
         print("")
-        print("Clearing local MP3 files since they are no longer needed...")
-        clear_local_music_folder()
+        if uploadFiles != 'false':
+            print('Uploading music into the cloud folders...')
+            upload_music(remoteDirectory)
+        else:
+            print('Uploading disabled via config.')
+        
+        print("")
+        if cleanFiles != 'false':
+            print("Clearing local MP3 files since they are no longer needed...")
+            clear_local_music_folder()
+        else:
+            print('Clearing local files disabled via config.')
         
         # script will run again every x minutes based on user input (INTERVAL variable)
         # default is set to 5 minutes, users can put in whatever they like to overrule the defaulft value

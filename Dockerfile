@@ -26,6 +26,11 @@ ENV PYTHONUNBUFFERED=1
 # by default the script will use 5, which means that the script will rerun every 5 minutes
 # users can overrule the default by simply providing their own INTERVAL variable
 ENV INTERVAL=5
-
+# default format for saving files to, supports yt_dlp formatting
+ENV FILEFORMAT="%(playlist)s/%(title)s-%(id)s.%(ext)s"
+# default to true to upload files, can be overridden by users
+ENV UPLOADFILES=true
+# default to true to clean files, can be overridden by users
+ENV CLEANFILES=true
 # run the Music Service with Python
 CMD [ "python", "./main.py"]

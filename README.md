@@ -48,6 +48,11 @@ docker run -d \
 thijstakken/musicservice:latest
 ```
 
+> :information_source: **Optional**: Three additional env flags are available:
+> `-e UPLOADFILES=false` can be set to not upload files to DAV
+> `-e CLEANFILES=false` can be set to not clean up music cache
+> `-e FILEFORMAT="%(playlist)s/%(title)s-%(id)s.%(ext)s"` can be set to change the file name format
+
 Before you can run the docker-compose or docker run command, you will first have to make a few changes.
 
 <br>
